@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <style>
+        body,html,#renderCanvas { width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = function() {
+            var isPlaying = false;
+            const scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color3.Black;
+
+            const alpha =  Math.PI/4;
+            const beta = Math.PI/3;
+            const radius = 8;
+            const target = new BABYLON.Vector3(0, 0, 0);
+
+            const camera = new BABYLON.ArcRotateCamera("Camera", alpha, beta, radius, target, scene);
+            camera.attachControl(canvas, true);
+
+            camera.inputs.attached.mousewheel.detachControl(canvas);
+            //To prevent zoom out to a sphere in mobile
+            camera.upperRadiusLimit = camera.radius;
+            camera.lowerRadiusLimit = camera.radius;
+
+            //Create PhotoDome
+            /*var dome = new BABYLON.PhotoDome(
+                "testdome",
+                "https://cople.app/three.jpg",
+                {
+                    resolution: 32,
+                    size: 4000,
+                    useDirectMapping: true
+                },
+                scene
+            );
+            dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
+            dome.fovMultiplier = 2.0;
+            dome.isPickable = false;*/
+            var skybox = BABYLON.Mesh.CreateBox("skyBox", 100.0, scene);
+            var skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
+            skyboxMaterial.backFaceCulling = false;
+            skyboxMaterial.reflectionTexture = new BABYLON.Texture("https://cople.app/five.png", scene, true);
+            skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.FIXED_EQUIRECTANGULAR_MODE;
+            skyboxMaterial.disableLighting = true;
+            skybox.material = skyboxMaterial;
+
+            //var vrHelper = scene.createDefaultVRExperience();
+
+            //ecran.material.diffuseTexture = new BABYLON.VideoTexture("video", "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", scene, true);
+
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0));
+
+            /*const box = BABYLON.MeshBuilder.CreateBox("box", {});
+            box.position.x = 0.5;
+            box.position.y = 1;
+
+            const boxMaterial = new BABYLON.StandardMaterial("material", scene);
+            boxMaterial.diffuseColor = BABYLON.Color3.Random();
+            box.material = boxMaterial;
+
+            box.actionManager = new BABYLON.ActionManager(scene);
+            box.actionManager.registerAction(
+                new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, 
+                function (evt) {
+                    const sourceBox = evt.meshUnderPointer;
+                    sourceBox.position.x += 0.1;
+                    sourceBox.position.y += 0.1;
+                    boxMaterial.diffuseColor = BABYLON.Color3.Random();
+                }));*/
+
+            //const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 4, height: 4});
+
+            /*const xrPromise = scene.createDefaultXRExperienceAsync({
+                floorMeshes: [ground]
+            });*/
+
+            /*const xr = await scene.createDefaultXRExperienceAsync({
+                // ask for an ar-session
+                uiOptions: {
+                sessionMode: "immersive-ar",
+                },
+            });*/
+            const xrPromise = scene.createDefaultXRExperienceAsync({
+                floorMeshes: []
+            });
+
+            const plane = BABYLON.MeshBuilder.CreatePlane("plane", {
+                size: 4,
+                sideOrientation:BABYLON.Mesh.DOUBLESIDE
+            }, scene);
+            // Our built-in 'sphere' shape. Params: name, subdivs, size, scene
+            //var groundtwo = BABYLON.Mesh.CreateGround("ground1", 4, 4, 2, scene);
+
+            // Move the sphere upward 1/2 its height
+            //groundtwo.position.y = 1;
+            plane.position.y = 1;
+            //mesh.rotation.x = alpha; //rotation around x axis
+            //mesh.rotation.y = Math.PI;  //rotation around y axis
+            //mesh.rotation.z  =  gamma; //rotation around z axis
+            //plane.position.x = 5;
+
+            var mat = new BABYLON.StandardMaterial("mat", scene);
+
+            var videoTexture = new BABYLON.VideoTexture("video", ["https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"], scene, true, false);
+            videoTexture.level = 2
+            mat.diffuseTexture = videoTexture;
+            //groundtwo.material = mat;
+            plane.material = mat;
+
+            scene.onPointerUp = function () {
+                /*if (isPlaying) {
+                    videoTexture.video.pause();
+                    isPlaying = false;
+                } else {*/
+                    isPlaying = true;
+                    videoTexture.video.play();
+                //}
+            }
+
+            return xrPromise.then((xrExperience) => {
+                console.log("Done, WebXR is enabled.");
+                return scene;
+            });
+        };
+
+        createScene().then(sceneToRender => {
+            engine.runRenderLoop(() => sceneToRender.render());
+        });
+    </script>
+</body>
+</html>
